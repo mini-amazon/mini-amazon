@@ -3,7 +3,9 @@ name = "mini-amazon"
 version = "1.2023.0"
 authors = ["CompSci 316 Teaching Staff <compsci-316@duke.edu>"]
 description = "Mini Amazon Course Project"
-
+packages = [
+    { include = 'app' }
+]
 [tool.poetry.dependencies]
 python = "^3.11"
 flask = "2.3.3"

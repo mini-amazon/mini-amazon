@@ -39,7 +39,7 @@ vary.
 To run your website, in your container shell, go into the repository
 directory and issue the following commands:
 ```
-poetry shell
+eval $(poetry env activate)
 flask run
 ```
 
