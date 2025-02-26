@@ -1,4 +1,4 @@
-# Skeleton Code for CompSci 316/516 Standard Course Project.
+# Skeleton Code for CompSci 316/516 Standard Course Project .
 
 Originally created by [Rickard
 Stureborg](http://www.rickard.stureborg.com) and [Yihao
