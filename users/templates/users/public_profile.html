@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.full_name }} - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">{{ profile_user.full_name }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                        <i class="fas fa-user fa-4x text-secondary"></i>
+                    </div>
+                    <h5 class="mt-2">{{ profile_user.full_name }}</h5>
+                    
+                    {% if profile_user.inventory_set.exists %}
+                        <div class="badge bg-primary p-2 mt-2">Seller</div>
+                    {% endif %}
+                    
+                    <p class="text-muted mt-2">Member since {{ profile_user.date_joined|date:"F Y" }}</p>
+                </div>
+                
+                {% if profile_user.inventory_set.exists %}
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Seller Information</h6>
+                            <p><strong>Products:</strong> {{ profile_user.inventory_set.count }}</p>
+                            
+                            {% if seller_reviews %}
+                                <p>
+                                    <strong>Rating:</strong>
+                                    <span class="text-warning">
+                                        {% with avg_rating=seller_reviews|dictsort:"rating"|last %}
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= avg_rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% elif forloop.counter <= avg_rating|add:0.5 %}
+                                                    <i class="fas fa-star-half-alt"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            ({{ seller_reviews.count }} reviews)
+                                        {% endwith %}
+                                    </span>
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-8">
+                {% if seller_reviews %}
+                    <h5 class="mb-3">Seller Reviews</h5>
+                    
+                    {% for review in seller_reviews|slice:":5" %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="text-warning">
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= review.rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <span class="ms-2">by <a href="{% url 'users:public_profile' review.user.id %}">{{ review.user.full_name }}</a></span>
+                                    </div>
+                                    <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="card-text">{{ review.comment }}</p>
+                                <small class="text-muted">Order #{{ review.order.id }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    {% if seller_reviews.count > 5 %}
+                        <div class="text-center mt-3">
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#moreReviews">
+                                Show More Reviews ({{ seller_reviews.count|add:"-5" }} more)
+                            </button>
+                        </div>
+                        
+                        <div class="collapse mt-3" id="moreReviews">
+                            {% for review in seller_reviews|slice:"5:" %}
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="text-warning">
+                                                    {% for i in "12345"|make_list %}
+                                                        {% if forloop.counter <= review.rating %}
+                                                            <i class="fas fa-star"></i>
+                                                        {% else %}
+                                                            <i class="far fa-star"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </span>
+                                                <span class="ms-2">by <a href="{% url 'users:public_profile' review.user.id %}">{{ review.user.full_name }}</a></span>
+                                            </div>
+                                            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <p class="card-text">{{ review.comment }}</p>
+                                        <small class="text-muted">Order #{{ review.order.id }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                {% elif profile_user.inventory_set.exists %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-star fa-3x mb-3 text-muted"></i>
+                        <p class="lead">No reviews yet</p>
+                        <p>This seller hasn't received any reviews yet.</p>
+                    </div>
+                {% endif %}
+                
+                {% if profile_user.inventory_set.exists %}
+                    <h5 class="mt-4 mb-3">Products by {{ profile_user.full_name }}</h5>
+                    <div class="row">
+                        {% for inventory in profile_user.inventory_set.all|slice:":6" %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    {% if inventory.product.image %}
+                                        <img src="{{ inventory.product.image.url }}" class="card-img-top" alt="{{ inventory.product.name }}">
+                                    {% else %}
+                                        <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 140px;">
+                                            <span class="text-center">No Image</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ inventory.product.name|truncatechars:50 }}</h6>
+                                        <p class="card-text text-primary">${{ inventory.price }}</p>
+                                        <a href="{% url 'products:detail' inventory.product.id %}" class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if profile_user.inventory_set.count > 6 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'products:list' %}?seller={{ profile_user.id }}" class="btn btn-outline-primary">
+                                View All Products ({{ profile_user.inventory_set.count }})
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

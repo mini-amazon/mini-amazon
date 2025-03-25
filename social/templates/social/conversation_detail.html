@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Conversation with {{ other_user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0">{{ other_user.full_name }}</h4>
+                        <small class="text-white-50">{{ other_user.email }}</small>
+                    </div>
+                    <a href="{% url 'social:conversations' %}" class="btn btn-sm btn-light">Back to Conversations</a>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Order context if any -->
+                    {% if orders %}
+                        <div class="p-3 border-bottom bg-light">
+                            <h6>Related Orders:</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for order in orders %}
+                                    <a href="{% url 'carts:order_detail' order.id %}" class="badge bg-secondary text-decoration-none">
+                                        Order #{{ order.id }} ({{ order.created_at|date:"M d, Y" }})
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Messages -->
+                    <div class="p-3" id="messages-container" style="max-height: 500px; overflow-y: auto;">
+                        {% if messages_list %}
+                            {% for message in messages_list %}
+                                <div class="mb-3 d-flex {% if message.sender == request.user %}justify-content-end{% endif %}">
+                                    <div class="chat-message {% if message.sender == request.user %}chat-message-sender{% else %}chat-message-receiver{% endif %}">
+                                        <div class="chat-message-content">
+                                            {{ message.content }}
+                                        </div>
+                                        <div class="chat-message-time text-muted small">
+                                            {{ message.created_at|date:"M d, Y, g:i a" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted my-5">
+                                <p>No messages yet. Start the conversation!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- New message form -->
+                    <div class="p-3 border-top">
+                        <form method="post" id="message-form">
+                            {% csrf_token %}
+                            {{ form|crispy }}
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="submit" class="btn btn-primary">Send Message</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-message {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+    }
+
+    .chat-message-sender {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .chat-message-receiver {
+        background-color: #f1f1f1;
+        color: #212529;
+    }
+
+    .chat-message-time {
+        text-align: right;
+        font-size: 0.75em;
+        margin-top: 5px;
+    }
+
+    .chat-message-sender .chat-message-time {
+        color: rgba(255, 255, 255, 0.8);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll to bottom of messages container
+        const messagesContainer = document.getElementById('messages-container');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Optional: Add AJAX submission for the message form
+        // Commented out for now as it requires jQuery or fetch API setup
+        /*
+        const messageForm = document.getElementById('message-form');
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Use fetch or jQuery.ajax to submit the form
+            // On success, append the new message to the messages container
+            // and clear the form
+        });
+        */
+    });
+</script>
+{% endblock %} 

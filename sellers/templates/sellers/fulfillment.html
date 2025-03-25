@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Fulfillment - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Order Fulfillment</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Order Fulfillment</h2>
+        <div>
+            <a href="{% url 'sellers:sales_history' %}" class="btn btn-outline-primary">
+                <i class="fas fa-chart-line me-1"></i> View Sales History
+            </a>
+        </div>
+    </div>
+    
+    <!-- Seller Dashboard Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body bg-light">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:inventory' %}">
+                                <i class="fas fa-boxes me-1"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'sellers:order_fulfillment' %}">
+                                <i class="fas fa-shipping-fast me-1"></i> Order Fulfillment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:sales_history' %}">
+                                <i class="fas fa-chart-line me-1"></i> Sales History
+                            </a>
+                        </li>
+                        <li class="nav-item ms-auto">
+                            <a class="nav-link" href="{% url 'users:public_profile' user.id %}">
+                                <i class="fas fa-user me-1"></i> Seller Profile
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fulfillment Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-3x text-warning"></i>
+                    </div>
+                    <h5>Pending Orders</h5>
+                    <h3>{{ pending_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle fa-3x text-success"></i>
+                    </div>
+                    <h5>Fulfilled Orders</h5>
+                    <h3>{{ fulfilled_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-box fa-3x text-primary"></i>
+                    </div>
+                    <h5>Total Items Sold</h5>
+                    <h3>{{ total_items_sold }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-dollar-sign fa-3x text-primary"></i>
+                    </div>
+                    <h5>Total Sales</h5>
+                    <h3>${{ total_sales }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fulfillment Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <form method="get" action="{% url 'sellers:order_fulfillment' %}" class="d-flex mb-3 mb-md-0">
+                        <input type="text" name="search" class="form-control me-2" placeholder="Search by order #, product, or buyer..." value="{{ request.GET.search }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-end">
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Filter: {{ current_filter_display }}
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}filter=all">All Orders</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}filter=pending">Pending Orders</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}filter=fulfilled">Fulfilled Orders</a></li>
+                            </ul>
+                        </div>
+                        <a href="{% url 'sellers:order_fulfillment' %}" class="btn btn-outline-secondary{% if not request.GET.search and not request.GET.filter %} disabled{% endif %}">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Orders Table -->
+    {% if order_items %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Buyer</th>
+                                <th>Product</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Total</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order_items %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'sellers:order_detail' item.order.id %}">
+                                            #{{ item.order.id }}
+                                        </a>
+                                    </td>
+                                    <td>{{ item.order.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'users:public_profile' item.order.user.id %}">
+                                            {{ item.order.user.full_name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2" style="width: 40px;">
+                                                {% if item.inventory.product.image %}
+                                                    <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="img-fluid rounded">
+                                                {% else %}
+                                                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 40px; width: 40px;">
+                                                        <i class="fas fa-box"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <a href="{% url 'products:detail' item.inventory.product.id %}">
+                                                    {{ item.inventory.product.name|truncatechars:30 }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ item.quantity }}</td>
+                                    <td class="text-end">${{ item.unit_price }}</td>
+                                    <td class="text-end">${{ item.get_total_price }}</td>
+                                    <td>
+                                        {% if item.is_fulfilled %}
+                                            <span class="badge bg-success">Fulfilled</span>
+                                            <div class="small text-muted">{{ item.fulfilled_at|date:"M d, Y" }}</div>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if not item.is_fulfilled %}
+                                            <form method="post" action="{% url 'sellers:fulfill_order_item' item.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-check me-1"></i> Fulfill
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <a href="{% url 'sellers:order_detail' item.order.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-shipping-fast fa-4x mb-3 text-muted"></i>
+                <h4>No orders found</h4>
+                {% if request.GET.search or request.GET.filter %}
+                    <p class="text-muted mb-4">No orders match your current search or filter criteria.</p>
+                    <a href="{% url 'sellers:order_fulfillment' %}" class="btn btn-primary">
+                        <i class="fas fa-sync-alt me-1"></i> Reset Filters
+                    </a>
+                {% else %}
+                    <p class="text-muted mb-4">You don't have any orders to fulfill yet.</p>
+                    <a href="{% url 'sellers:inventory' %}" class="btn btn-primary">
+                        <i class="fas fa-boxes me-1"></i> Manage Inventory
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Fulfillment Tips -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Fulfillment Tips</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex">
+                        <div class="me-3 flex-shrink-0">
+                            <i class="fas fa-clock fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Process Orders Promptly</h6>
+                            <p class="small text-muted mb-0">Try to fulfill orders within 24 hours to keep customers satisfied.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex">
+                        <div class="me-3 flex-shrink-0">
+                            <i class="fas fa-box-open fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Check Inventory</h6>
+                            <p class="small text-muted mb-0">Ensure you have sufficient stock before marking an order as fulfilled.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex">
+                        <div class="me-3 flex-shrink-0">
+                            <i class="fas fa-star fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Higher Ratings</h6>
+                            <p class="small text-muted mb-0">Fast fulfillment leads to better reviews and repeat customers.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

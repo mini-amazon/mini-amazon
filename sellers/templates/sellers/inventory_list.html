@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Inventory - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Seller Dashboard</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Your Inventory</h2>
+        <div>
+            <a href="{% url 'products:create' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i> Create New Product
+            </a>
+            <a href="{% url 'sellers:inventory_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Add to Inventory
+            </a>
+        </div>
+    </div>
+    
+    <!-- Seller Dashboard Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body bg-light">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'sellers:inventory' %}">
+                                <i class="fas fa-boxes me-1"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:order_fulfillment' %}">
+                                <i class="fas fa-shipping-fast me-1"></i> Order Fulfillment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:sales_analytics' %}">
+                                <i class="fas fa-chart-line me-1"></i> Sales Analytics
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if inventory_items %}
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">Your Products</h5>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">{{ inventory_items.count }} item(s)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total Value</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="rounded" width="50">
+                                        {% else %}
+                                            <div class="bg-light rounded text-center" style="width: 50px; height: 50px">
+                                                <i class="fas fa-image text-muted mt-2"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="ms-3">
+                                            <h6 class="mb-0">{{ item.product.name }}</h6>
+                                            <small class="text-muted">{{ item.product.category.name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${{ item.price }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.total_value }}</td>
+                                <td>
+                                    {% if item.is_in_stock %}
+                                        <span class="badge bg-success">In Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'products:detail' item.product.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'sellers:inventory_update' item.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'sellers:inventory_delete' item.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&lsaquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&rsaquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">No products in your inventory yet!</h4>
+            <p>You haven't added any products to your inventory. Start selling by adding products to your inventory.</p>
+            <hr>
+            <div class="d-flex">
+                <a href="{% url 'products:create' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-plus-circle me-1"></i> Create New Product
+                </a>
+                <a href="{% url 'sellers:inventory_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add to Inventory
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

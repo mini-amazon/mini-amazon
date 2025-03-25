@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Inventory Item - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'sellers:inventory' %}">Seller Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Inventory Item</li>
+        </ol>
+    </nav>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Edit Inventory Item</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <!-- Product Info -->
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0 me-3" style="width: 80px;">
+                                    {% if inventory.product.image %}
+                                        <img src="{{ inventory.product.image.url }}" alt="{{ inventory.product.name }}" class="img-fluid rounded">
+                                    {% else %}
+                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 80px; width: 80px;">
+                                            <i class="fas fa-box fa-2x"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ inventory.product.name }}</h5>
+                                    <p class="text-muted small mb-0">
+                                        {% if inventory.product.category %}
+                                            <span class="badge bg-info text-dark">{{ inventory.product.category.name }}</span>
+                                        {% endif %}
+                                        <span>Product ID: {{ inventory.product.id }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Product Description -->
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Product Description</h6>
+                                    <p class="card-text">{{ inventory.product.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Edit Form -->
+                    <form method="post" action="{% url 'sellers:edit_inventory' inventory.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label">Price ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="price" name="price" min="0.01" step="0.01" value="{{ inventory.price }}" required>
+                                </div>
+                                <div class="form-text">Set your selling price for this product.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="0" value="{{ inventory.quantity }}" required>
+                                <div class="form-text">Enter the number of items you have available for sale.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sales Information -->
+                        <div class="alert alert-info mb-4">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-info-circle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h6 class="alert-heading">Sales Information</h6>
+                                    <p class="mb-0">
+                                        This product has sold {{ total_sold }} units so far.
+                                        {% if avg_price %}
+                                            The average selling price across all sellers is ${{ avg_price }}.
+                                        {% else %}
+                                            There are no other sellers for this product.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'sellers:inventory' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Additional Options -->
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Additional Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="d-grid">
+                                <a href="{% url 'products:detail' inventory.product.id %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i> View Product Page
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#removeModal">
+                                    <i class="fas fa-trash-alt me-1"></i> Remove from Inventory
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeModalLabel">Confirm Removal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove <strong>{{ inventory.product.name }}</strong> from your inventory?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'sellers:delete_inventory' inventory.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

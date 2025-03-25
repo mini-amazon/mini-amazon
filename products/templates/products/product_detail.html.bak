@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load product_filters %}
+
+{% block title %}{{ product.name }} - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Product Details -->
+    <div class="col-md-9">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products:list' %}">Products</a></li>
+                {% if product.category %}
+                    <li class="breadcrumb-item"><a href="{% url 'products:list' %}?category={{ product.category.id }}">{{ product.category.name }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <!-- Product Image -->
+                    <div class="col-md-5 mb-4 mb-md-0">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                                <span class="text-center">No Image Available</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="col-md-7">
+                        <h2 class="mb-3">{{ product.name }}</h2>
+                        
+                        {% if product.category %}
+                            <p class="mb-2">
+                                <strong>Category:</strong> 
+                                <a href="{% url 'products:list' %}?category={{ product.category.id }}">{{ product.category.name }}</a>
+                            </p>
+                        {% endif %}
+                        
+                        <p class="mb-2"><strong>Created By:</strong> 
+                            <a href="{% url 'users:public_profile' product.created_by.id %}">{{ product.created_by.full_name }}</a>
+                        </p>
+                        
+                        <div class="mt-4">
+                            <h5 class="mb-3">Description</h5>
+                            <p>{{ product.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

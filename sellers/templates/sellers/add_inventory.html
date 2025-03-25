@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add to Inventory - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'sellers:inventory' %}">Seller Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add to Inventory</li>
+        </ol>
+    </nav>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add Product to Inventory</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">
+                        Add an existing product to your inventory. If you want to create a new product that doesn't exist yet, 
+                        <a href="{% url 'products:create' %}">create a new product first</a>.
+                    </p>
+                    
+                    <!-- Product Search Form -->
+                    <form method="get" action="{% url 'sellers:add_inventory' %}" class="mb-4">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Search Results -->
+                    {% if search_results %}
+                        <h5 class="mb-3">Search Results</h5>
+                        <div class="list-group mb-4">
+                            {% for product in search_results %}
+                                <div class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <!-- Product Image -->
+                                        <div class="col-md-2 mb-3 mb-md-0 text-center">
+                                            {% if product.image %}
+                                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 60px;">
+                                            {% else %}
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 60px; width: 60px;">
+                                                    <i class="fas fa-box"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Product Info -->
+                                        <div class="col-md-6 mb-3 mb-md-0">
+                                            <h6 class="mb-1">{{ product.name }}</h6>
+                                            <p class="text-muted small mb-0">
+                                                {% if product.category %}
+                                                    <span class="badge bg-info text-dark">{{ product.category.name }}</span>
+                                                {% endif %}
+                                                <span>ID: {{ product.id }}</span>
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Add to Inventory Button -->
+                                        <div class="col-md-4 text-end">
+                                            {% if product.inventory_set.filter(seller=user).exists %}
+                                                <span class="badge bg-secondary">Already in your inventory</span>
+                                            {% else %}
+                                                <button type="button" class="btn btn-primary btn-sm" 
+                                                        data-bs-toggle="modal" data-bs-target="#addModal{{ product.id }}">
+                                                    <i class="fas fa-plus me-1"></i> Add to Inventory
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Add to Inventory Modal -->
+                                    <div class="modal fade" id="addModal{{ product.id }}" tabindex="-1" 
+                                         aria-labelledby="addModalLabel{{ product.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="addModalLabel{{ product.id }}">
+                                                        Add "{{ product.name }}" to Inventory
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form method="post" action="{% url 'sellers:add_to_inventory' product.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label for="price{{ product.id }}" class="form-label">Price ($)</label>
+                                                            <input type="number" class="form-control" id="price{{ product.id }}" 
+                                                                   name="price" min="0.01" step="0.01" required>
+                                                            <div class="form-text">Set your selling price for this product.</div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="quantity{{ product.id }}" class="form-label">Quantity</label>
+                                                            <input type="number" class="form-control" id="quantity{{ product.id }}" 
+                                                                   name="quantity" min="1" value="1" required>
+                                                            <div class="form-text">Enter the number of items you have available for sale.</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Add to Inventory</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if search_results.has_other_pages %}
+                            <nav aria-label="Search results pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if search_results.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?search={{ search_query }}&page=1" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?search={{ search_query }}&page={{ search_results.previous_page_number }}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in search_results.paginator.page_range %}
+                                        {% if search_results.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > search_results.number|add:'-3' and num < search_results.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?search={{ search_query }}&page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if search_results.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?search={{ search_query }}&page={{ search_results.next_page_number }}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?search={{ search_query }}&page={{ search_results.paginator.num_pages }}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% elif search_query %}
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No products found matching "{{ search_query }}". Try a different search term or 
+                            <a href="{% url 'products:create' %}">create a new product</a>.
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Add Specific Product By ID -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Add by Product ID</h5>
+                            <p class="card-text">If you know the exact product ID, you can add it directly to your inventory.</p>
+                            <form method="get" action="{% url 'sellers:add_inventory_by_id' %}" class="row g-2">
+                                <div class="col-sm-8">
+                                    <input type="number" class="form-control" name="product_id" placeholder="Product ID" min="1" required>
+                                </div>
+                                <div class="col-sm-4">
+                                    <button type="submit" class="btn btn-primary w-100">Find Product</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <a href="{% url 'sellers:inventory' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Inventory
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

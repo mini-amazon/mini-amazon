@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Orders{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Your Orders</h1>
+    
+    {% if orders %}
+        <div class="row">
+            {% for order in orders %}
+                <div class="col-md-12 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">Order #{{ order.id }}</h5>
+                                <span class="badge badge-{{ order.status_badge }}">{{ order.status }}</span>
+                            </div>
+                            <p class="card-text">
+                                <small class="text-muted">Ordered on: {{ order.created_at|date:"F j, Y" }}</small>
+                            </p>
+                            <p class="mb-1"><strong>Total:</strong> ${{ order.total_amount }}</p>
+                            <p class="mb-1"><strong>Status:</strong> {{ order.status }}</p>
+                            
+                            <div class="mt-3">
+                                <a href="{% url 'carts:order_detail' order.id %}" class="btn btn-primary btn-sm">View Details</a>
+                                {% if order.status == 'pending' %}
+                                    <a href="{% url 'carts:cancel_order' order.id %}" class="btn btn-danger btn-sm">Cancel Order</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            You haven't placed any orders yet. <a href="{% url 'products:list' %}">Continue shopping</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,7 @@
+Django==4.2.10
+Pillow==10.1.0
+django-crispy-forms==2.0
+crispy-bootstrap5==0.7
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+django-allauth==0.57.0 

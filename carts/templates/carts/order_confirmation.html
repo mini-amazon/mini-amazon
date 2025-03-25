@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card mb-4 border-success">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <span class="display-1 text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </span>
+                    </div>
+                    <h2 class="mb-3">Thank You for Your Order!</h2>
+                    <p class="lead mb-1">Your order has been placed successfully.</p>
+                    <p class="mb-4">Order #{{ order.id }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'carts:order_detail' order.id %}" class="btn btn-primary">
+                            <i class="fas fa-clipboard-list me-1"></i> View Order Details
+                        </a>
+                        <a href="{% url 'products:list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-shopping-bag me-1"></i> Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Order Number</h6>
+                            <p class="mb-0">{{ order.id }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Order Date</h6>
+                            <p class="mb-0">{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Shipping Address</h6>
+                            <p class="mb-0"><strong>{{ order.user.full_name }}</strong></p>
+                            <p class="mb-0" style="white-space: pre-line;">{{ order.user.address }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Payment Information</h6>
+                            <p class="mb-0">Mini-Amazon Wallet</p>
+                            <p class="mb-0">Amount: ${{ order.total_amount }}</p>
+                            <p class="mb-0">Status: <span class="badge bg-success">Paid</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Seller</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.orderitem_set.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'products:detail' item.inventory.product.id %}">
+                                                {{ item.inventory.product.name|truncatechars:60 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'users:public_profile' item.inventory.seller.id %}">
+                                                {{ item.inventory.seller.full_name }}
+                                            </a>
+                                        </td>
+                                        <td class="text-center">{{ item.quantity }}</td>
+                                        <td class="text-end">${{ item.unit_price }}</td>
+                                        <td class="text-end">${{ item.get_total_price }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <th colspan="4" class="text-end">Total:</th>
+                                    <th class="text-end">${{ order.total_amount }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- What's Next? -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">What's Next?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="mb-3">
+                                <span class="fa-stack fa-2x">
+                                    <i class="fas fa-circle fa-stack-2x text-primary"></i>
+                                    <i class="fas fa-box fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </div>
+                            <h5>Order Processing</h5>
+                            <p class="text-muted small">Your order is being processed by the sellers. You can track the status on your order details page.</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="mb-3">
+                                <span class="fa-stack fa-2x">
+                                    <i class="fas fa-circle fa-stack-2x text-primary"></i>
+                                    <i class="fas fa-truck fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </div>
+                            <h5>Shipping</h5>
+                            <p class="text-muted small">Sellers will ship your items within 1-2 business days. Estimated delivery: 5-7 business days.</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <span class="fa-stack fa-2x">
+                                    <i class="fas fa-circle fa-stack-2x text-primary"></i>
+                                    <i class="fas fa-star fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </div>
+                            <h5>Review</h5>
+                            <p class="text-muted small">After receiving your items, please consider leaving reviews for the products and sellers.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Support -->
+            <div class="card text-center mb-4">
+                <div class="card-body py-4">
+                    <h5>Need Help?</h5>
+                    <p class="mb-3">If you have any questions about your order, please contact customer support.</p>
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="fas fa-headset me-1"></i> Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

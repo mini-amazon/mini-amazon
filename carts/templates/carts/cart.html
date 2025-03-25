@@ -1,0 +1,455 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Shopping Cart" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">{% trans "Shopping Cart" %}</h1>
+    
+    <!-- 添加警报容器 -->
+    <div class="cart-alert-container"></div>
+    
+    <!-- 现有代码继续 -->
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if cart_items %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Cart Items ({{ cart_items|length }})</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for item in cart_items %}
+                                <li class="list-group-item py-3" id="cart-item-{{ item.id }}">
+                                    <div class="row align-items-center">
+                                        <!-- Product Image -->
+                                        <div class="col-md-2 mb-2 mb-md-0 text-center">
+                                            {% if item.inventory.product.image %}
+                                                <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="img-fluid rounded" style="max-height: 80px;">
+                                            {% else %}
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 80px; width: 80px;">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Product Info -->
+                                        <div class="col-md-4 mb-2 mb-md-0">
+                                            <h5 class="mb-1">
+                                                <a href="{% url 'products:detail' item.inventory.product.id %}" class="text-decoration-none">
+                                                    {{ item.inventory.product.name|truncatechars:40 }}
+                                                </a>
+                                            </h5>
+                                            <p class="text-muted mb-0 small">
+                                                Seller: 
+                                                <a href="{% url 'users:public_profile' item.inventory.seller.id %}">
+                                                    {{ item.inventory.seller.full_name }}
+                                                </a>
+                                            </p>
+                                            <p class="text-muted mb-0 small">
+                                                {{ item.inventory.quantity }} available
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Quantity -->
+                                        <div class="col-md-2 mb-2 mb-md-0 text-center">
+                                            <div class="input-group">
+                                                <form method="post" action="{% url 'carts:update_item' item.id %}" data-item-id="{{ item.id }}">
+                                                    {% csrf_token %}
+                                                    <div class="input-group input-group-sm">
+                                                        <button class="btn btn-outline-secondary qty-btn" data-action="decrease" type="button">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                        <input type="number" name="quantity" class="form-control cart-quantity-input" 
+                                                            value="{{ item.quantity }}" min="1" max="{{ item.inventory.quantity }}" data-item-id="{{ item.id }}">
+                                                        <button class="btn btn-outline-secondary qty-btn" data-action="increase" type="button">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Price -->
+                                        <div class="col-md-2 mb-2 mb-md-0 text-center">
+                                            <span class="text-muted">Unit Price:</span>
+                                            <h6 class="text-primary">${{ item.inventory.price }}</h6>
+                                        </div>
+                                        
+                                        <!-- Subtotal -->
+                                        <div class="col-md-1 mb-2 mb-md-0 text-center">
+                                            <span class="fw-bold" id="item-total-{{ item.id }}">${{ item.get_total_price }}</span>
+                                        </div>
+                                        
+                                        <!-- Remove Button -->
+                                        <div class="col-md-1 text-center">
+                                            <form method="post" action="{% url 'carts:remove_item' item.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center bg-light">
+                        <a href="{% url 'products:list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+                        </a>
+                        <form method="post" action="{% url 'carts:clear' %}" onsubmit="return confirm('Are you sure you want to empty your cart?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="fas fa-trash me-1"></i> Empty Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4 sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal ({{ cart_items|length }} items):</span>
+                            <span id="cart-subtotal">${{ cart_total }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Shipping:</span>
+                            <span>Free</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3 fw-bold">
+                            <span>Total:</span>
+                            <span id="cart-total" class="text-primary">${{ cart_total }}</span>
+                        </div>
+                        
+                        {% if user.is_authenticated %}
+                            <div class="alert alert-info small mb-3">
+                                <div class="d-flex">
+                                    <div class="me-2">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">Your current balance: <strong>${{ user.balance }}</strong></p>
+                                        {% if user.balance < cart_total %}
+                                            <p class="mb-0 mt-2 text-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                Insufficient balance for checkout.
+                                                <a href="{% url 'users:balance' %}">Add funds</a>
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'carts:checkout' %}" class="btn btn-primary{% if not user.is_authenticated or user.balance < cart_total %} disabled{% endif %}">
+                                <i class="fas fa-lock me-1"></i> Proceed to Checkout
+                            </a>
+                            
+                            {% if not user.is_authenticated %}
+                                <p class="small text-center mt-2">
+                                    <a href="{% url 'users:login' %}?next={% url 'carts:view' %}">Sign in</a> to checkout
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Saved for Later (Optional Feature) -->
+                {% if saved_items %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Saved for Later ({{ saved_items|length }})</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                {% for item in saved_items %}
+                                    <li class="list-group-item py-3">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0" style="width: 60px;">
+                                                {% if item.inventory.product.image %}
+                                                    <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="img-fluid rounded">
+                                                {% else %}
+                                                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 60px; width: 60px;">
+                                                        <i class="fas fa-image"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-0">
+                                                    <a href="{% url 'products:detail' item.inventory.product.id %}">
+                                                        {{ item.inventory.product.name|truncatechars:40 }}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-primary mb-1">${{ item.inventory.price }}</p>
+                                                <div class="d-flex">
+                                                    <form action="{% url 'carts:move_to_cart' %}" method="post" class="me-2">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="saved_item_id" value="{{ item.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                            Move to Cart
+                                                        </button>
+                                                    </form>
+                                                    <form action="{% url 'carts:remove_saved' %}" method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="saved_item_id" value="{{ item.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            Remove
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <i class="fas fa-shopping-cart fa-4x mb-3 text-muted"></i>
+                <h4>Your cart is empty</h4>
+                <p class="text-muted mb-4">Looks like you haven't added any products to your cart yet.</p>
+                <a href="{% url 'products:list' %}" class="btn btn-primary">
+                    Start Shopping
+                </a>
+                
+                {% if saved_items %}
+                    <div class="mt-4">
+                        <h5>You have {{ saved_items|length }} item(s) saved for later</h5>
+                        <a href="#saved-items" class="btn btn-outline-primary mt-2">View Saved Items</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Saved for Later when cart is empty -->
+        {% if saved_items %}
+            <div id="saved-items" class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Saved for Later ({{ saved_items|length }})</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for item in saved_items %}
+                            <li class="list-group-item py-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2 text-center">
+                                        {% if item.inventory.product.image %}
+                                            <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="img-fluid rounded" style="max-height: 80px;">
+                                        {% else %}
+                                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 80px; width: 80px;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5 class="mb-1">
+                                            <a href="{% url 'products:detail' item.inventory.product.id %}">
+                                                {{ item.inventory.product.name }}
+                                            </a>
+                                        </h5>
+                                        <p class="text-muted mb-0 small">
+                                            Seller: {{ item.inventory.seller.full_name }}
+                                        </p>
+                                        <p class="text-primary mb-0">${{ item.inventory.price }}</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <form action="{% url 'carts:move_to_cart' %}" method="post" class="d-inline-block me-2">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="saved_item_id" value="{{ item.id }}">
+                                            <button type="submit" class="btn btn-outline-primary">
+                                                <i class="fas fa-cart-plus me-1"></i> Move to Cart
+                                            </button>
+                                        </form>
+                                        <form action="{% url 'carts:remove_saved' %}" method="post" class="d-inline-block">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="saved_item_id" value="{{ item.id }}">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="fas fa-trash-alt me-1"></i> Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+    
+    <!-- Product Recommendations -->
+    {% if recommended_products %}
+        <div class="mt-5">
+            <h3 class="mb-4">Recommended for You</h3>
+            <div class="row">
+                {% for product in recommended_products %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 product-card">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                            {% else %}
+                                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 140px;">
+                                    <span class="text-center">No Image</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ product.name|truncatechars:40 }}</h5>
+                                
+                                <div class="text-warning small mb-2">
+                                    {% with product.get_average_rating as avg_rating %}
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= avg_rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% elif forloop.counter <= avg_rating|add:0.5 %}
+                                                <i class="fas fa-star-half-alt"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="text-muted ms-1">({{ product.productreview_set.count }})</span>
+                                    {% endwith %}
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    {% with lowest_price=product.get_lowest_price %}
+                                        {% if lowest_price %}
+                                            <p class="card-text text-primary fw-bold mb-2">${{ lowest_price }}</p>
+                                        {% else %}
+                                            <p class="card-text text-muted mb-2">Currently unavailable</p>
+                                        {% endif %}
+                                    {% endwith %}
+                                    
+                                    <a href="{% url 'products:detail' product.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 购物车样式可以在这里添加 */
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 确保jQuery已加载 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // 修复购物车数量按钮
+        $('.qty-btn').on('click', function(e) {
+            e.preventDefault();
+            
+            var $button = $(this);
+            var $form = $button.closest('form');
+            var itemId = $form.data('item-id');
+            var action = $button.data('action');
+            var $input = $form.find('input[name="quantity"]');
+            var currentVal = parseInt($input.val());
+
+            // 确定新的数量值
+            var newQuantity;
+            if (action === 'decrease') {
+                newQuantity = currentVal > 1 ? currentVal - 1 : 1;
+            } else {
+                newQuantity = currentVal + 1;
+            }
+            
+            // 更新输入值
+            $input.val(newQuantity);
+            
+            // 发送AJAX请求
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: $form.serialize(),
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                },
+                success: function(response) {
+                    // 在页面刷新之前，显示成功消息
+                    if (response.success) {
+                        showAlert('success', response.message || 'Cart updated successfully');
+                        // 更新UI元素，如小计和总计
+                        updateCartTotals();
+                    } else {
+                        showAlert('danger', response.message || 'An error occurred');
+                        // 如果出现错误，还原输入值
+                        $input.val(currentVal);
+                    }
+                },
+                error: function(xhr) {
+                    showAlert('danger', 'An error occurred. Please try again.');
+                    // 还原输入值
+                    $input.val(currentVal);
+                }
+            });
+        });
+        
+        // 辅助函数来获取CSRF令牌
+        function getCsrfToken() {
+            return $('input[name="csrfmiddlewaretoken"]').val();
+        }
+        
+        // 辅助函数来显示警报
+        function showAlert(type, message) {
+            var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                                message +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                            '</div>';
+            
+            // 在页面顶部添加警报
+            $('.cart-alert-container').html(alertHtml);
+            
+            // 5秒后自动隐藏
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+        
+        // 函数来更新购物车总计
+        function updateCartTotals() {
+            // 刷新页面以获取更新的值
+            location.reload();
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Manage Balance - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Account Navigation</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> Profile
+                </a>
+                <a href="{% url 'users:balance' %}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-dollar-sign me-2"></i> Balance
+                </a>
+                <a href="{% url 'users:purchase_history' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Purchase History
+                </a>
+                <a href="{% url 'users:change_password' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-key me-2"></i> Change Password
+                </a>
+                <a href="{% url 'sellers:inventory' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-store me-2"></i> Seller Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Manage Balance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Current Balance</h5>
+                                <p class="display-4">${{ user.balance }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Add or Withdraw Funds</h5>
+                                <form method="post" novalidate>
+                                    {% csrf_token %}
+                                    {{ form|crispy }}
+                                    <div class="d-grid gap-2 mt-3">
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> In a real production environment, this would integrate with an actual payment processor.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

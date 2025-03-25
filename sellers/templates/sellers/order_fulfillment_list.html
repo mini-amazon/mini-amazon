@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Fulfillment - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Order Fulfillment</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Order Fulfillment</h2>
+        <div>
+            {% if pending_only %}
+                <a href="{% url 'sellers:order_fulfillment' %}" class="btn btn-outline-primary">Show All Orders</a>
+            {% else %}
+                <a href="{% url 'sellers:order_fulfillment' %}?pending=true" class="btn btn-outline-primary">Show Pending Only</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Seller Dashboard Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body bg-light">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:inventory' %}">
+                                <i class="fas fa-boxes me-1"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'sellers:order_fulfillment' %}">
+                                <i class="fas fa-shipping-fast me-1"></i> Order Fulfillment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:sales_analytics' %}">
+                                <i class="fas fa-chart-line me-1"></i> Sales Analytics
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Order Fulfillment Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Orders</h5>
+                    <p class="card-text display-4">{{ unfulfilled_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Fulfilled Orders</h5>
+                    <p class="card-text display-4">{{ fulfilled_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Orders</h5>
+                    <p class="card-text display-4">{{ fulfilled_count|add:unfulfilled_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if order_items %}
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">Orders to Fulfill</h5>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">{{ order_items.count }} item(s)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Buyer</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                            <tr class="{% if not item.is_fulfilled %}table-light{% endif %}">
+                                <td>
+                                    <span class="fw-bold">{{ item.order.id }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.inventory.product.image %}
+                                            <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="rounded" width="40">
+                                        {% else %}
+                                            <div class="bg-light rounded text-center" style="width: 40px; height: 40px">
+                                                <i class="fas fa-image text-muted mt-2"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="ms-2">
+                                            <p class="mb-0">{{ item.inventory.product.name }}</p>
+                                            <small class="text-muted">{{ item.inventory.product.category.name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price }}</td>
+                                <td>
+                                    <p class="mb-0">{{ item.order.user.full_name }}</p>
+                                    <small class="text-muted">{{ item.order.user.address|truncatechars:25 }}</small>
+                                </td>
+                                <td>{{ item.order.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if item.is_fulfilled %}
+                                        <span class="badge bg-success">Fulfilled</span>
+                                        <div><small class="text-muted">{{ item.fulfilled_at|date:"M d, Y" }}</small></div>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if not item.is_fulfilled %}
+                                        <form method="post" action="{% url 'sellers:fulfill_order_item' item.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="order_item_id" value="{{ item.id }}">
+                                            <input type="hidden" name="confirm" value="True">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check-circle me-1"></i> Fulfill
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if pending_only %}&pending=true{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pending_only %}&pending=true{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&lsaquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <a class="page-link" href="?page={{ num }}{% if pending_only %}&pending=true{% endif %}">{{ num }}</a>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if pending_only %}&pending=true{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pending_only %}&pending=true{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&rsaquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if pending_only %}&pending=true{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">No orders to fulfill!</h4>
+            <p>There are currently no orders requiring your attention.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

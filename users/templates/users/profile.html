@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}My Profile - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Account Navigation</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-user me-2"></i> Profile
+                </a>
+                <a href="{% url 'users:balance' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-dollar-sign me-2"></i> Balance
+                </a>
+                <a href="{% url 'users:purchase_history' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Purchase History
+                </a>
+                <a href="{% url 'users:change_password' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-key me-2"></i> Change Password
+                </a>
+                <a href="{% url 'sellers:inventory' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-store me-2"></i> Seller Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">My Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6 class="fw-bold">Current Balance</h6>
+                    <p class="lead">${{ user.balance }}</p>
+                    <a href="{% url 'users:balance' %}" class="btn btn-sm btn-outline-primary">Manage Balance</a>
+                </div>
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 col-6 mx-auto mt-4">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

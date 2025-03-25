@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Review for {{ seller.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Delete Review</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-3">Are you sure you want to delete your review for seller "{{ seller.full_name }}"?</h5>
+                    
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h6>Your Rating:</h6>
+                                <div class="rating-display">
+                                    {% for i in '12345'|make_list %}
+                                        {% if forloop.counter <= review.rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if review.order %}
+                                <p class="text-muted">For Order #{{ review.order.id }}</p>
+                            {% endif %}
+                            <p class="mt-3 mb-0">{{ review.comment }}</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted">This action cannot be undone.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'users:public_profile' seller.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Review</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

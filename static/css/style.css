@@ -1,0 +1,203 @@
+/* Main Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* Product Cards */
+.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Star Ratings */
+.rating {
+    color: #ffc107;
+}
+
+/* Rating Select (for forms) */
+.rating-select {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-select input[type="radio"] {
+    display: none;
+}
+
+.rating-select label {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="%23d3d3d3"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px;
+}
+
+.rating-select label:hover,
+.rating-select label:hover ~ label,
+.rating-select input[type="radio"]:checked ~ label {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="%23ffc107"/></svg>');
+}
+
+.rating-select label.selected {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="%23ffc107"/></svg>');
+}
+
+/* Rating Display */
+.rating-display {
+    display: inline-flex;
+    color: #ffc107;
+}
+
+/* Cart Badge */
+.badge {
+    position: relative;
+    top: -8px;
+    right: 5px;
+    font-size: 0.6rem;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control:focus {
+    border-color: #6c757d;
+    box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #232F3E;
+    border-color: #232F3E;
+}
+
+.btn-primary:hover {
+    background-color: #1a2530;
+    border-color: #1a2530;
+}
+
+.btn-warning {
+    background-color: #FF9900;
+    border-color: #FF9900;
+}
+
+.btn-warning:hover {
+    background-color: #e68a00;
+    border-color: #e68a00;
+}
+
+/* Chat Messages */
+.chat-message {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.chat-message-sender {
+    background-color: #007bff;
+    color: white;
+    align-self: flex-end;
+}
+
+.chat-message-receiver {
+    background-color: #f1f1f1;
+    color: #212529;
+    align-self: flex-start;
+}
+
+.chat-message-time {
+    text-align: right;
+    font-size: 0.75em;
+    margin-top: 5px;
+}
+
+.chat-message-sender .chat-message-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Reviews */
+.review-card {
+    border-left: 4px solid #ffc107;
+    margin-bottom: 15px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.review-author {
+    font-weight: bold;
+}
+
+.review-date {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+
+/* Footer */
+.footer {
+    margin-top: auto;
+}
+
+/* Utility Classes */
+.text-amazon {
+    color: #232F3E;
+}
+
+.bg-amazon {
+    background-color: #232F3E;
+}
+
+.text-amazon-secondary {
+    color: #FF9900;
+}
+
+.bg-amazon-secondary {
+    background-color: #FF9900;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .card-img-top {
+        height: 150px;
+    }
+    
+    .rating-select label {
+        width: 24px;
+        height: 24px;
+        background-size: 20px;
+    }
+} 

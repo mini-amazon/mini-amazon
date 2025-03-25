@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Inventory - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Seller Dashboard</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Your Inventory</h2>
+        <div>
+            <a href="{% url 'products:create' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-plus-circle me-1"></i> Create New Product
+            </a>
+            <a href="{% url 'sellers:add_inventory' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Add to Inventory
+            </a>
+        </div>
+    </div>
+    
+    <!-- Seller Dashboard Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body bg-light">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'sellers:inventory' %}">
+                                <i class="fas fa-boxes me-1"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:order_fulfillment' %}">
+                                <i class="fas fa-shipping-fast me-1"></i> Order Fulfillment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:sales_history' %}">
+                                <i class="fas fa-chart-line me-1"></i> Sales History
+                            </a>
+                        </li>
+                        <li class="nav-item ms-auto">
+                            <a class="nav-link" href="{% url 'users:public_profile' user.id %}">
+                                <i class="fas fa-user me-1"></i> Seller Profile
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-box fa-3x text-primary"></i>
+                    </div>
+                    <h5>Total Products</h5>
+                    <h3>{{ inventory_items.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-cubes fa-3x text-primary"></i>
+                    </div>
+                    <h5>Total Items</h5>
+                    <h3>{{ total_quantity }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-dollar-sign fa-3x text-primary"></i>
+                    </div>
+                    <h5>Total Value</h5>
+                    <h3>${{ total_value }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-shopping-cart fa-3x text-primary"></i>
+                    </div>
+                    <h5>Pending Orders</h5>
+                    <h3>{{ pending_orders }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Filter and Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <form method="get" action="{% url 'sellers:inventory' %}" class="d-flex mb-3 mb-md-0">
+                        <input type="text" name="search" class="form-control me-2" placeholder="Search your inventory..." value="{{ request.GET.search }}">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-end">
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Sort by: {{ current_sort_display }}
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=name">Name (A-Z)</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=-name">Name (Z-A)</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=price">Price (Low to High)</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=-price">Price (High to Low)</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=quantity">Quantity (Low to High)</a></li>
+                                <li><a class="dropdown-item" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}sort=-quantity">Quantity (High to Low)</a></li>
+                            </ul>
+                        </div>
+                        <a href="{% url 'sellers:inventory' %}" class="btn btn-outline-secondary{% if not request.GET.search and not request.GET.sort %} disabled{% endif %}">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Table -->
+    {% if inventory_items %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40%;">Product</th>
+                                <th>Category</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Total Value</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-3" style="width: 60px;">
+                                                {% if item.product.image %}
+                                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid rounded">
+                                                {% else %}
+                                                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 60px; width: 60px;">
+                                                        <i class="fas fa-box"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">
+                                                    <a href="{% url 'products:detail' item.product.id %}">{{ item.product.name }}</a>
+                                                </h6>
+                                                <span class="text-muted small">ID: {{ item.product.id }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if item.product.category %}
+                                            <span class="badge bg-info text-dark">{{ item.product.category.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No category</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">${{ item.price }}</td>
+                                    <td class="text-center">
+                                        <span class="{% if item.quantity < 5 %}text-danger{% elif item.quantity < 10 %}text-warning{% else %}text-success{% endif %}">
+                                            {{ item.quantity }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">${{ item.total_value }}</td>
+                                    <td>
+                                        {% if item.quantity > 0 %}
+                                            <span class="badge bg-success">In Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="{% url 'sellers:edit_inventory' item.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Delete Confirmation Modal -->
+                                        <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ item.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ item.id }}">Confirm Deletion</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to remove <strong>{{ item.product.name }}</strong> from your inventory?</p>
+                                                        <p class="text-danger">This action cannot be undone.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form method="post" action="{% url 'sellers:delete_inventory' item.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-box-open fa-4x mb-3 text-muted"></i>
+                <h4>Your inventory is empty</h4>
+                <p class="text-muted mb-4">You don't have any products in your inventory yet.</p>
+                <div class="d-flex justify-content-center">
+                    <a href="{% url 'products:create' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-plus-circle me-1"></i> Create New Product
+                    </a>
+                    <a href="{% url 'sellers:add_inventory' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add to Inventory
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Tips for Sellers -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Tips for Sellers</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex">
+                        <div class="me-3 flex-shrink-0">
+                            <i class="fas fa-tag fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Competitive Pricing</h6>
+                            <p class="small text-muted mb-0">Set competitive prices for your products to attract more customers.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex">
+                        <div class="me-3 flex-shrink-0">
+                            <i class="fas fa-box-open fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Manage Inventory</h6>
+                            <p class="small text-muted mb-0">Keep your inventory updated to avoid stockouts and missed sales.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex">
+                        <div class="me-3 flex-shrink-0">
+                            <i class="fas fa-shipping-fast fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Quick Fulfillment</h6>
+                            <p class="small text-muted mb-0">Fulfill orders promptly to increase customer satisfaction and ratings.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

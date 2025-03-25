@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'carts:view' %}">Shopping Cart</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+        </ol>
+    </nav>
+    
+    <h2 class="mb-4">Checkout</h2>
+    
+    {% if cart_items %}
+        <div class="row">
+            <!-- Checkout Items & Details -->
+            <div class="col-lg-8">
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Shipping Address</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>{{ user.full_name }}</strong></p>
+                        <p style="white-space: pre-line;">{{ user.address }}</p>
+                        
+                        <div class="mt-3">
+                            <a href="{% url 'users:profile' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i> Update Address
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Order Items -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Items ({{ cart_items|length }})</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for item in cart_items %}
+                                <li class="list-group-item py-3">
+                                    <div class="row align-items-center">
+                                        <!-- Product Image -->
+                                        <div class="col-md-2 mb-2 mb-md-0 text-center">
+                                            {% if item.inventory.product.image %}
+                                                <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="img-fluid rounded" style="max-height: 60px;">
+                                            {% else %}
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 60px; width: 60px;">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Product Info -->
+                                        <div class="col-md-5 mb-2 mb-md-0">
+                                            <h6 class="mb-0">
+                                                {{ item.inventory.product.name|truncatechars:60 }}
+                                            </h6>
+                                            <p class="text-muted mb-0 small">
+                                                Seller: {{ item.inventory.seller.full_name }}
+                                            </p>
+                                            <p class="text-muted mb-0 small">
+                                                Quantity: {{ item.quantity }}
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- Price -->
+                                        <div class="col-md-2 mb-2 mb-md-0 text-center">
+                                            <span class="text-muted small">Unit Price:</span>
+                                            <p class="mb-0">${{ item.inventory.price }}</p>
+                                        </div>
+                                        
+                                        <!-- Subtotal -->
+                                        <div class="col-md-3 text-end">
+                                            <span class="text-muted small">Subtotal:</span>
+                                            <p class="fw-bold mb-0">${{ item.get_total_price }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Payment Method -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Payment Method</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="wallet" checked>
+                            <label class="form-check-label" for="wallet">
+                                <i class="fas fa-wallet me-2"></i> Mini-Amazon Wallet
+                            </label>
+                            <p class="text-muted small ms-4 mb-0">Your current balance: <strong>${{ user.balance }}</strong></p>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span>In a real environment, additional payment methods would be available here.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shipping Method -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Shipping Method</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="shipping_method" id="standard" checked>
+                            <label class="form-check-label" for="standard">
+                                <strong>Standard Shipping (Free)</strong>
+                            </label>
+                            <p class="text-muted small ms-4 mb-0">Delivery in 5-7 business days</p>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="shipping_method" id="express" disabled>
+                            <label class="form-check-label" for="express">
+                                <strong>Express Shipping ($9.99)</strong> - Not available for this order
+                            </label>
+                            <p class="text-muted small ms-4 mb-0">Delivery in 2-3 business days</p>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="shipping_method" id="overnight" disabled>
+                            <label class="form-check-label" for="overnight">
+                                <strong>Overnight Shipping ($19.99)</strong> - Not available for this order
+                            </label>
+                            <p class="text-muted small ms-4 mb-0">Delivery next business day</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Items ({{ cart_items|length }}):</span>
+                            <span>${{ cart_total }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span>Free</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Estimated tax:</span>
+                            <span>$0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3 fw-bold">
+                            <span>Order Total:</span>
+                            <span class="text-primary">${{ cart_total }}</span>
+                        </div>
+                        
+                        <!-- 余额充足/不足提示 -->
+                        {% if user.balance < cart_total %}
+                            <div class="alert alert-danger mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Insufficient balance.</strong>
+                                <a href="{% url 'users:balance' %}">Add funds</a> to complete your purchase.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success mb-3">
+                                <div class="d-flex">
+                                    <div class="me-2">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0"><strong>Sufficient balance for this order.</strong></p>
+                                        <p class="mb-0 small">Your balance after purchase will be ${{ remaining_balance }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'carts:place_order' %}">
+                            {% csrf_token %}
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg{% if user.balance < cart_total %} disabled{% endif %}">
+                                    <i class="fas fa-check-circle me-1"></i> Place Your Order
+                                </button>
+                                <a href="{% url 'carts:view' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-edit me-1"></i> Edit Cart
+                                </a>
+                            </div>
+                            
+                            <div class="text-center small text-muted mt-3">
+                                By placing your order, you agree to Mini-Amazon's
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">terms and conditions</a>.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <i class="fas fa-shopping-cart fa-4x mb-3 text-muted"></i>
+                <h4>Your cart is empty</h4>
+                <p class="text-muted">You need to add items to your cart before checkout.</p>
+                <a href="{% url 'products:list' %}" class="btn btn-primary">
+                    Browse Products
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. General Terms</h6>
+                <p>By placing an order on Mini-Amazon, you agree to these terms and conditions.</p>
+                
+                <h6>2. Payments</h6>
+                <p>All payments are processed using your Mini-Amazon balance. Funds will be deducted from your account upon order confirmation.</p>
+                
+                <h6>3. Shipping</h6>
+                <p>Standard shipping is free for all orders. Delivery times may vary depending on seller location and product availability.</p>
+                
+                <h6>4. Returns and Refunds</h6>
+                <p>Return policies vary by seller. Please contact the seller directly for return information.</p>
+                
+                <h6>5. Privacy</h6>
+                <p>Your personal information will be used in accordance with our Privacy Policy.</p>
+                
+                <h6>6. Disclaimers</h6>
+                <p>Mini-Amazon is a demonstration project. No real transactions or shipments will occur.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Agree</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

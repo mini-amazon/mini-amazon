@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">Welcome to Mini-Amazon!</h1>
+    <p class="lead">Buy and sell products, manage inventory, leave reviews, and more.</p>
+    <hr class="my-4">
+    <p>Get started by browsing our products or creating an account to start selling.</p>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+        <a href="{% url 'products:list' %}" class="btn btn-primary btn-lg me-md-2">Browse Products</a>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'users:register' %}" class="btn btn-outline-secondary btn-lg">Register</a>
+        {% else %}
+            <a href="{% url 'sellers:inventory' %}" class="btn btn-outline-secondary btn-lg">Seller Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-5">
+    <h2 class="mb-4">Featured Products</h2>
+    <div class="row">
+        <!-- This will be populated with actual products once they are added to the database -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span class="text-center p-3">Featured Product Image</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Sample Product 1</h5>
+                    <p class="card-text">A brief description of the product will appear here.</p>
+                    <p class="card-text"><strong>$99.99</strong></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-muted ms-1">(4.0)</span>
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span class="text-center p-3">Featured Product Image</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Sample Product 2</h5>
+                    <p class="card-text">A brief description of the product will appear here.</p>
+                    <p class="card-text"><strong>$149.99</strong></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-muted ms-1">(3.5)</span>
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span class="text-center p-3">Featured Product Image</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Sample Product 3</h5>
+                    <p class="card-text">A brief description of the product will appear here.</p>
+                    <p class="card-text"><strong>$199.99</strong></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span class="text-muted ms-1">(5.0)</span>
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 bg-light">
+            <div class="card-body text-center">
+                <i class="fas fa-shopping-cart fa-3x mb-3 text-primary"></i>
+                <h4 class="card-title">Shop with Confidence</h4>
+                <p class="card-text">Browse our wide selection of products and find exactly what you need.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 bg-light">
+            <div class="card-body text-center">
+                <i class="fas fa-store fa-3x mb-3 text-primary"></i>
+                <h4 class="card-title">Sell Your Products</h4>
+                <p class="card-text">Create listings and manage your inventory with our easy-to-use seller tools.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 bg-light">
+            <div class="card-body text-center">
+                <i class="fas fa-star fa-3x mb-3 text-primary"></i>
+                <h4 class="card-title">Rate and Review</h4>
+                <p class="card-text">Share your experiences and help others make informed decisions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Analytics - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sales Analytics</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Sales Analytics</h2>
+    </div>
+    
+    <!-- Seller Dashboard Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body bg-light">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:inventory' %}">
+                                <i class="fas fa-boxes me-1"></i> Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sellers:order_fulfillment' %}">
+                                <i class="fas fa-shipping-fast me-1"></i> Order Fulfillment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'sellers:sales_analytics' %}">
+                                <i class="fas fa-chart-line me-1"></i> Sales Analytics
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales Summary -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales</h5>
+                    <p class="card-text display-4">${{ total_sales|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Units Sold</h5>
+                    <p class="card-text display-4">{{ total_units }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Orders Fulfilled</h5>
+                    <p class="card-text display-4">{{ orders_fulfilled }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Sales Breakdown -->
+    {% if products %}
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Product Sales Breakdown</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Total Sales</th>
+                            <th>Units Sold</th>
+                            <th>Orders</th>
+                            <th>% of Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {{ product.product__name }}
+                                    </div>
+                                </td>
+                                <td>${{ product.total_sales|default:"0.00"|floatformat:2 }}</td>
+                                <td>{{ product.units_sold|default:"0" }}</td>
+                                <td>{{ product.order_count|default:"0" }}</td>
+                                <td>
+                                    {% if total_sales and product.total_sales %}
+                                        {% widthratio product.total_sales total_sales 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">No sales data yet!</h4>
+            <p>There's no sales data available yet. Once you start fulfilling orders, you'll see your sales analytics here.</p>
+        </div>
+    {% endif %}
+    
+    <!-- Placeholder for future charts -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Monthly Sales</h5>
+                </div>
+                <div class="card-body">
+                    {% if total_sales > 0 %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+                            <p>Monthly sales chart will be displayed here</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+                            <p>No sales data available yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Sales by Product Category</h5>
+                </div>
+                <div class="card-body">
+                    {% if total_sales > 0 %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
+                            <p>Category breakdown chart will be displayed here</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
+                            <p>No sales data available yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

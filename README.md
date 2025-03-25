@@ -1,25 +1,72 @@
-# Team: MySQL
 
-## Team Members and Roles
+## Features
 
-- **Users Guru:** Qingning Zeng – responsible for Account / Purchases  
-- **Products Guru:** Jennifer Li – responsible for Products  
-- **Carts Guru:** Muying Jin – responsible for Cart / Order  
-- **Sellers Guru:** Muying Jin – responsible for Inventory / Order Fulfillment  
-- **Social Guru:** Shi Wang – responsible for Feedback / Messaging  
+- User authentication and profile management
+- Virtual currency balance management
+- Product browsing, searching, and filtering
+- Shopping cart and checkout system
+- Order tracking and fulfillment
+- Seller inventory management
+- Product and seller reviews
+- Optional messaging system
 
-## What Each Member Has Done Since the Last Milestone
+## Setup Instructions
 
-- **Muying Jin:**  
-  Migrated the provided skeleton code from GitLab to our GitHub repo. Successfully ran the skeleton code and completed the tutorial, implementing the wishlist functionality. Participated in team discussions to finalize the overall database schema and page-by-page website design. Specifically contributed to designing the Home/Landing Page and Login & Registration Pages, defining navigation structure and user flow.
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd mini-amazon
+```
 
-- **Jennifer Li:**  
-   I have successfully completed the tutorial and run the skeleton code in my local development environment. In the database design phase, I actively contributed to defining table relationships, constraints, and key assumptions to ensure a robust schema. For the website, I played a role in designing UI elements, structuring logical flows, and refining user interactions. Throughout the process, I have maintained strong collaboration with my teammates, providing support to each other when necessary and troubleshooting the problems, to ensure the success of our project. 
+2. Create a virtual environment and activate it:
+```bash
+python -m venv venv
+# On Windows
+venv\Scripts\activate
+# On macOS/Linux
+source venv/bin/activate
+```
 
-- **Shi Wang:**  
-  Migrated the provided skeleton code from GitLab to our GitHub repo. Successfully ran the skeleton code and completed the tutorial, implementing the wishlist functionality. Participated in team discussions to finalize the overall database schema and page-by-page website design. Specifically contributed to designing the product review and seller review pages.
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-- **Qingning Zeng:**  
-  Focused mainly on the design aspect for our course project mini Amazon. Crafted the overall website design and user experience by defining the navigation structure, page layouts, and user flows to ensure a cohesive and intuitive interface. Collaborated closely with the team to align on the overall database schema and detailed page designs, ensuring our prototypes serve as a clear blueprint for future development.
+4. Set up environment variables:
+Create a `.env` file in the project root with the following content:
+```
+SECRET_KEY=your_secret_key
+DEBUG=True
+DB_NAME=miniamazon
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+```
 
-[GitHub Repository](https://github.com/mini-amazon/mini-amazon)
+5. Run migrations:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+6. Create a superuser:
+```bash
+python manage.py createsuperuser
+```
+
+7. Run the server:
+```bash
+python manage.py runserver
+```
+
+8. Access the site at http://127.0.0.1:8000/
+
+## Project Structure
+
+- `users`: User authentication, profiles, and balance management
+- `products`: Product listings, categories, and search
+- `carts`: Shopping cart and order processing
+- `sellers`: Inventory management and order fulfillment
+- `social`: Reviews, ratings, and messaging
+

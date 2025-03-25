@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit {{ product.name }} - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products:list' %}">Products</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'products:detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Edit Product</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.description|as_crispy_field }}
+                    
+                    <div class="mb-3">
+                        {% if product.image %}
+                            <div class="mb-3">
+                                <p><strong>Current Image:</strong></p>
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 200px;">
+                            </div>
+                        {% endif %}
+                        
+                        {{ form.image|as_crispy_field }}
+                        
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Recommended image size: 800x600 pixels. Maximum file size: 5MB.
+                            Supported formats: JPG, JPEG, PNG, GIF.
+                            {% if product.image %}Leave empty to keep the current image.{% endif %}
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="alert-heading">Important Note</h5>
+                                <p class="mb-0">
+                                    Updating this product will not affect existing inventory listings.
+                                    If this product is in your inventory, you can manage pricing and quantity 
+                                    from your Seller Dashboard.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'products:detail' product.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Update Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Preview image before upload
+        const imageInput = document.getElementById('id_image');
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    // Check file size
+                    const fileSize = this.files[0].size / 1024 / 1024; // in MB
+                    if (fileSize > 5) {
+                        alert('File size exceeds 5MB limit. Please choose a smaller file.');
+                        this.value = '';
+                        return;
+                    }
+                    
+                    // Create preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Check if preview already exists
+                        let preview = document.querySelector('.image-preview');
+                        if (!preview) {
+                            preview = document.createElement('div');
+                            preview.className = 'image-preview mt-2';
+                            imageInput.parentNode.appendChild(preview);
+                        }
+                        
+                        preview.innerHTML = `
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <p class="mb-1"><strong>New Image Preview:</strong></p>
+                                    <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">
+                                </div>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

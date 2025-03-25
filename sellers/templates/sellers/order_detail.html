@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} Details - Mini-Amazon{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'sellers:order_fulfillment' %}">Order Fulfillment</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Order #{{ order.id }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Order #{{ order.id }}</h4>
+                    <span class="badge {% if order_items_fulfilled == order_items.count %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2">
+                        {% if order_items_fulfilled == order_items.count %}
+                            Fulfilled
+                        {% elif order_items_fulfilled > 0 %}
+                            Partially Fulfilled
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Order Placed</h6>
+                            <p class="mb-0">{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Order Value</h6>
+                            <p class="mb-0">${{ order_total }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Buyer</h6>
+                            <p class="mb-1">
+                                <a href="{% url 'users:public_profile' order.user.id %}">
+                                    {{ order.user.full_name }}
+                                </a>
+                            </p>
+                            <p class="mb-0 text-muted">{{ order.user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Shipping Address</h6>
+                            <p class="mb-0" style="white-space: pre-line;">{{ order.user.address }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Items for You to Fulfill</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40%;">Product</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-end">Total</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3" style="width: 60px;">
+                                                    {% if item.inventory.product.image %}
+                                                        <img src="{{ item.inventory.product.image.url }}" alt="{{ item.inventory.product.name }}" class="img-fluid rounded">
+                                                    {% else %}
+                                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 60px; width: 60px;">
+                                                            <i class="fas fa-box"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">
+                                                        <a href="{% url 'products:detail' item.inventory.product.id %}">
+                                                            {{ item.inventory.product.name }}
+                                                        </a>
+                                                    </h6>
+                                                    <small class="text-muted">Product ID: {{ item.inventory.product.id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ item.quantity }}</td>
+                                        <td class="text-end">${{ item.unit_price }}</td>
+                                        <td class="text-end">${{ item.get_total_price }}</td>
+                                        <td>
+                                            {% if item.is_fulfilled %}
+                                                <span class="badge bg-success">Fulfilled</span>
+                                                <p class="small text-muted mb-0">{{ item.fulfilled_at|date:"M d, Y" }}</p>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if not item.is_fulfilled %}
+                                                <form method="post" action="{% url 'sellers:fulfill_order_item' item.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="next" value="{% url 'sellers:order_detail' order.id %}">
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-check me-1"></i> Fulfill
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="3" class="text-end">Order Total:</th>
+                                    <th class="text-end">${{ order_total }}</th>
+                                    <th colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Message from Buyer (if any) -->
+            {% if order.message %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Message from Buyer</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{{ order.message }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Status and Actions -->
+            <div class="card mb-4 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Fulfillment Status</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: {{ fulfillment_percentage }}%"></div>
+                        </div>
+                        <p class="text-muted small">{{ order_items_fulfilled }} of {{ order_items.count }} items fulfilled</p>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        {% if pending_items %}
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fulfillAllModal">
+                                <i class="fas fa-check-circle me-1"></i> Fulfill All Items
+                            </button>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#contactBuyerModal">
+                            <i class="fas fa-envelope me-1"></i> Message Buyer
+                        </button>
+                        
+                        <a href="{% url 'sellers:order_fulfillment' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Orders
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Buyer Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Buyer Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-user fa-2x"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ order.user.full_name }}</h6>
+                            <p class="text-muted mb-0 small">Customer since {{ order.user.date_joined|date:"F Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted small text-uppercase">Contact Information</h6>
+                        <p class="mb-1"><i class="fas fa-envelope me-2 text-muted"></i> {{ order.user.email }}</p>
+                    </div>
+                    
+                    <div>
+                        <h6 class="text-muted small text-uppercase">Order History with You</h6>
+                        <p class="mb-1"><i class="fas fa-shopping-cart me-2 text-muted"></i> {{ order_count }} orders</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fulfill All Modal -->
+<div class="modal fade" id="fulfillAllModal" tabindex="-1" aria-labelledby="fulfillAllModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fulfillAllModalLabel">Confirm Fulfillment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to mark all pending items in this order as fulfilled?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'sellers:fulfill_all_items' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i> Fulfill All Items
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Buyer Modal -->
+<div class="modal fade" id="contactBuyerModal" tabindex="-1" aria-labelledby="contactBuyerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactBuyerModalLabel">Message Buyer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'sellers:message_buyer' order.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="subject" name="subject" value="Regarding your order #{{ order.id }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>In a real system, this would send an email to the buyer.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
